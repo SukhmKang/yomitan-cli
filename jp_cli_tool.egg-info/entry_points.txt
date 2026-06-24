@@ -1,0 +1,2 @@
+[console_scripts]
+jp = jp_cli.cli:main

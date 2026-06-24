@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jp-cli-tool"
+version = "0.1.0"
+description = "Terminal Japanese lookup helper."
+license = {text = "GPL-3.0-or-later"}
+requires-python = ">=3.8"
+dependencies = [
+    "fugashi",
+    "openai",
+    "PyQt6>=6.7,<6.8",
+    "python-dotenv",
+    "rich",
+    "textual",
+    "typer",
+    "unidic-lite",
+]
+
+[project.scripts]
+jp = "jp_cli.cli:main"

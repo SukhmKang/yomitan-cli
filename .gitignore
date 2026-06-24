@@ -1,0 +1,6 @@
+.env
+.venv/
+.jp_data/
+__pycache__/
+*.pyc
+jmdict-eng-*.json

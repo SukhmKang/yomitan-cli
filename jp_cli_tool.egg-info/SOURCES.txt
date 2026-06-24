@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+jp_cli/__init__.py
+jp_cli/__main__.py
+jp_cli/cli.py
+jp_cli/deinflect.py
+jp_cli/desktop.py
+jp_cli_tool.egg-info/PKG-INFO
+jp_cli_tool.egg-info/SOURCES.txt
+jp_cli_tool.egg-info/dependency_links.txt
+jp_cli_tool.egg-info/entry_points.txt
+jp_cli_tool.egg-info/requires.txt
+jp_cli_tool.egg-info/top_level.txt
+tests/test_lookup.py

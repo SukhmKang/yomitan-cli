@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: jp-cli-tool
+Version: 0.1.0
+Summary: Terminal Japanese lookup helper.
+License: GPL-3.0-or-later
+Requires-Python: >=3.8
+License-File: LICENSE
+Requires-Dist: fugashi
+Requires-Dist: openai
+Requires-Dist: PyQt6<6.8,>=6.7
+Requires-Dist: python-dotenv
+Requires-Dist: rich
+Requires-Dist: textual
+Requires-Dist: typer
+Requires-Dist: unidic-lite
+Dynamic: license-file

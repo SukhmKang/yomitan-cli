@@ -1,0 +1,8 @@
+fugashi
+openai
+PyQt6<6.8,>=6.7
+python-dotenv
+rich
+textual
+typer
+unidic-lite
