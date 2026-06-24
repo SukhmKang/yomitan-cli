@@ -28,8 +28,28 @@ from .deinflect import Deinflection, deinflect, entry_matches_conditions
 
 POLL_INTERVAL_SECONDS = 0.5
 DEFAULT_LLM_MODEL = "gpt-4.1-mini"
-DEFAULT_DATA_DIR = Path(".jp_data")
-DEFAULT_DB_PATH = DEFAULT_DATA_DIR / "jp.sqlite3"
+DEFAULT_DB_PATH = Path.home() / ".jp_data" / "jp.sqlite3"
+
+
+def _resolve_db_path(override: Optional[str] = None) -> Path:
+    if override:
+        return Path(override).expanduser()
+    env = os.environ.get("JP_DB_PATH")
+    if env:
+        return Path(env).expanduser()
+    return DEFAULT_DB_PATH
+
+
+_db_path: Path = _resolve_db_path()
+
+
+def get_db_path() -> Path:
+    return _db_path
+
+
+def set_db_path(override: Optional[str] = None) -> None:
+    global _db_path
+    _db_path = _resolve_db_path(override)
 PARTICLE_HINTS = {
     "は": "topic marker",
     "が": "subject marker",
@@ -111,10 +131,22 @@ def main(argv: Optional[List[str]] = None) -> None:
         prog="jp",
         description="Japanese study helper for the terminal.",
     )
+
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
+        "--db-path",
+        default=None,
+        help=(
+            "Path to the SQLite dictionary DB. Overrides $JP_DB_PATH. "
+            "Default: ~/.jp_data/jp.sqlite3"
+        ),
+    )
+
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     watch_parser = subparsers.add_parser(
         "watch",
+        parents=[common],
         help="Watch the macOS clipboard for copied Japanese text.",
     )
     watch_parser.add_argument(
@@ -126,18 +158,21 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     inspect_parser = subparsers.add_parser(
         "inspect",
+        parents=[common],
         help="Show how text would be detected and classified.",
     )
     inspect_parser.add_argument("text", help="Text to inspect.")
 
     import_parser = subparsers.add_parser(
         "import-jmdict",
+        parents=[common],
         help="Import a JMdict JSON file into the local SQLite dictionary.",
     )
     import_parser.add_argument("path", help="Path to jmdict-eng JSON.")
 
     lookup_parser = subparsers.add_parser(
         "lookup",
+        parents=[common],
         help="Look up a word in the imported local dictionary.",
     )
     lookup_parser.add_argument("term", help="Japanese term to look up.")
@@ -145,26 +180,31 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     explain_parser = subparsers.add_parser(
         "explain",
+        parents=[common],
         help="Generate an N2-friendly explanation for a Japanese sentence.",
     )
     explain_parser.add_argument("text", help="Sentence to explain.")
 
     show_parser = subparsers.add_parser(
         "show",
+        parents=[common],
         help="Open the word pager for a specific Japanese text.",
     )
     show_parser.add_argument("text", help="Text to show in the pager.")
 
     subparsers.add_parser(
         "debug-keys",
+        parents=[common],
         help="Print raw terminal key bytes for debugging arrow keys.",
     )
     subparsers.add_parser(
         "desktop",
+        parents=[common],
         help="Open the persistent clipboard-driven desktop companion.",
     )
 
     args = parser.parse_args(argv)
+    set_db_path(args.db_path)
 
     if args.command == "watch":
         watch_clipboard(args.interval)
@@ -212,8 +252,9 @@ def import_jmdict(path: Path) -> None:
     if not isinstance(words, list):
         raise SystemExit("Expected a JMdict JSON file with a top-level 'words' list.")
 
-    DEFAULT_DATA_DIR.mkdir(exist_ok=True)
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    db_path = get_db_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(db_path)
     try:
         create_dictionary_schema(connection)
         connection.execute("delete from search_terms")
@@ -250,7 +291,7 @@ def import_jmdict(path: Path) -> None:
     finally:
         connection.close()
 
-    console.print(f"Imported {total:,} JMdict entries into [bold]{DEFAULT_DB_PATH}[/bold].")
+    console.print(f"Imported {total:,} JMdict entries into [bold]{db_path}[/bold].")
 
 
 def create_dictionary_schema(connection: sqlite3.Connection) -> None:
@@ -299,8 +340,9 @@ def create_explanation_cache_schema(connection: sqlite3.Connection) -> None:
 
 
 def ensure_cache_schema() -> None:
-    DEFAULT_DATA_DIR.mkdir(exist_ok=True)
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    db_path = get_db_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(db_path)
     try:
         create_explanation_cache_schema(connection)
         connection.commit()
@@ -360,10 +402,11 @@ def search_terms_for_word(word: dict) -> List[str]:
 
 
 def lookup_dictionary(term: str, limit: int = 5) -> List[DictionaryEntry]:
-    if not DEFAULT_DB_PATH.exists():
+    db_path = get_db_path()
+    if not db_path.exists():
         return []
 
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    connection = sqlite3.connect(db_path)
     try:
         rows = connection.execute(
             """
@@ -394,10 +437,11 @@ def lookup_dictionary(term: str, limit: int = 5) -> List[DictionaryEntry]:
 
 
 def lookup_dictionary_terms(terms: List[str], limit_per_term: int = 3) -> dict:
-    if not terms or not DEFAULT_DB_PATH.exists():
+    db_path = get_db_path()
+    if not terms or not db_path.exists():
         return {}
 
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    connection = sqlite3.connect(db_path)
     try:
         rows = []
         for offset in range(0, len(terms), 800):
@@ -883,11 +927,11 @@ def explain_sentence(sentence: str) -> SentenceExplanation:
 
 
 def get_cached_explanation(sentence: str, model: str) -> Optional[SentenceExplanation]:
-    if not DEFAULT_DB_PATH.exists():
+    if not get_db_path().exists():
         return None
 
     ensure_cache_schema()
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    connection = sqlite3.connect(get_db_path())
     try:
         row = connection.execute(
             """
@@ -907,7 +951,7 @@ def get_cached_explanation(sentence: str, model: str) -> Optional[SentenceExplan
 
 def save_cached_explanation(sentence: str, model: str, explanation: SentenceExplanation) -> None:
     ensure_cache_schema()
-    connection = sqlite3.connect(DEFAULT_DB_PATH)
+    connection = sqlite3.connect(get_db_path())
     try:
         connection.execute(
             """
