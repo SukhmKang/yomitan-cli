@@ -164,8 +164,8 @@ class JapaneseDesktopWindow(QMainWindow):
         self.explanation_tasks: List[ExplanationTask] = []
 
         self.setWindowTitle("JP Companion")
-        self.resize(680, 720)
-        self.setMinimumSize(500, 520)
+        self.resize(620, 500)
+        self.setMinimumSize(460, 380)
         self.setCentralWidget(self._build_ui())
         self._install_shortcuts()
 
@@ -177,8 +177,8 @@ class JapaneseDesktopWindow(QMainWindow):
     def _build_ui(self) -> QWidget:
         root = QWidget()
         layout = QVBoxLayout(root)
-        layout.setContentsMargins(12, 10, 12, 12)
-        layout.setSpacing(7)
+        layout.setContentsMargins(9, 7, 9, 9)
+        layout.setSpacing(5)
 
         heading = QHBoxLayout()
         title_group = QVBoxLayout()
@@ -212,8 +212,8 @@ class JapaneseDesktopWindow(QMainWindow):
         self.source_view.setObjectName("source")
         self.source_view.setReadOnly(True)
         self.source_view.setAcceptRichText(False)
-        self.source_view.setMinimumHeight(58)
-        self.source_view.setMaximumHeight(130)
+        self.source_view.setMinimumHeight(46)
+        self.source_view.setMaximumHeight(94)
         layout.addWidget(self.source_view)
 
         self.mode_stack = QStackedWidget()
@@ -226,10 +226,10 @@ class JapaneseDesktopWindow(QMainWindow):
         pane = QWidget()
         layout = QVBoxLayout(pane)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(5)
+        layout.setSpacing(3)
 
         self.match_list = QListWidget()
-        self.match_list.setMinimumHeight(125)
+        self.match_list.setMinimumHeight(82)
         self.match_list.setWordWrap(True)
         self.match_list.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
@@ -246,7 +246,7 @@ class JapaneseDesktopWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.addWidget(self.match_list)
         splitter.addWidget(self.definition_view)
-        splitter.setSizes([190, 390])
+        splitter.setSizes([125, 260])
         layout.addWidget(splitter)
         return pane
 
@@ -295,8 +295,8 @@ class JapaneseDesktopWindow(QMainWindow):
             f"Updated {self.current.captured_at} · {len(self.current.lookup_items)} matches"
         )
         self.source_view.setPlainText(self.current.text)
-        line_count = min(4, max(1, self.current.text.count("\n") + 1))
-        self.source_view.setFixedHeight(38 + line_count * 24)
+        line_count = min(3, max(1, self.current.text.count("\n") + 1))
+        self.source_view.setFixedHeight(28 + line_count * 20)
         self.match_list.blockSignals(True)
         self.match_list.clear()
         for item in self.current.lookup_items:
