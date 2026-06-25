@@ -261,6 +261,11 @@ class JapaneseDesktopWindow(QMainWindow):
     def _on_clipboard_changed(self) -> None:
         self._process_clipboard_text(self.app.clipboard().text())
 
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        if self.current is not None:
+            self._resize_source_view()
+
     def _process_clipboard_text(self, raw_text: str) -> None:
         text = normalize_clipboard_text(raw_text)
         if not text or text == self.last_clipboard_text:
@@ -295,8 +300,7 @@ class JapaneseDesktopWindow(QMainWindow):
             f"Updated {self.current.captured_at} · {len(self.current.lookup_items)} matches"
         )
         self.source_view.setPlainText(self.current.text)
-        line_count = min(3, max(1, self.current.text.count("\n") + 1))
-        self.source_view.setFixedHeight(28 + line_count * 20)
+        self._resize_source_view()
         self.match_list.blockSignals(True)
         self.match_list.clear()
         for item in self.current.lookup_items:
@@ -314,6 +318,15 @@ class JapaneseDesktopWindow(QMainWindow):
         else:
             self.definition_view.setHtml(self._message_html("No dictionary matches found."))
             self._highlight_selected_source()
+
+    def _resize_source_view(self) -> None:
+        if self.current is None:
+            return
+        document = self.source_view.document()
+        text_width = max(120, self.source_view.viewport().width() - 4)
+        document.setTextWidth(text_width)
+        content_height = int(document.documentLayout().documentSize().height())
+        self.source_view.setFixedHeight(min(180, max(48, content_height + 18)))
 
     def _select_lookup(self, index: int) -> None:
         if self.current is None or not self.current.lookup_items:
