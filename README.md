@@ -43,20 +43,32 @@ python -m jp_cli desktop
 
 ### Build the macOS app
 
-Install the packaging dependency once, then build:
+Install the packaging dependency once:
 
 ```bash
 /opt/homebrew/bin/python3.11 -m venv .venv
 .venv/bin/python -m pip install -e . pyinstaller
+```
+
+After making changes, rebuild, install to `~/Applications`, and relaunch:
+
+```bash
 ./scripts/build_macos_app.sh
 ```
 
-The app is created at `dist/JP Companion.app`. Copy it to your Applications
-folder and open it like any other Mac app. The packaged app uses the dictionary
-at `~/.jp_data/jp.sqlite3` and loads optional API settings from
-`~/.jp_data/.env`. The build script verifies that the project environment is
-running natively on Apple silicon before packaging and generates the macOS icon
-from `assets/jp-companion-icon.png`.
+The script builds and verifies a native Apple-silicon bundle, quits the running
+copy, replaces `~/Applications/JP Companion.app`, and opens the new version. It
+also removes temporary build artifacts after a successful installation.
+
+To create `dist/JP Companion.app` without installing or launching it:
+
+```bash
+./scripts/build_macos_app.sh --build-only
+```
+
+The packaged app uses the dictionary at `~/.jp_data/jp.sqlite3` and loads
+optional API settings from `~/.jp_data/.env`. The build script generates the
+macOS icon from `assets/jp-companion-icon.png`.
 
 Use the left/right or up/down arrow keys to move through dictionary matches.
 `Tab` toggles between the dictionary and `やさしく説明` views. The explanation

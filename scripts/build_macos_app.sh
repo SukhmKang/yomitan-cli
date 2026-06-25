@@ -4,11 +4,26 @@ set -eu
 PROJECT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$PROJECT_DIR"
 
+INSTALL_APP=true
+case "${1:-}" in
+  "")
+    ;;
+  --build-only)
+    INSTALL_APP=false
+    ;;
+  *)
+    echo "Usage: $0 [--build-only]"
+    exit 2
+    ;;
+esac
+
 export PYINSTALLER_CONFIG_DIR="$PROJECT_DIR/build/.pyinstaller"
 PYTHON="$PROJECT_DIR/.venv/bin/python"
 ICON_SOURCE="$PROJECT_DIR/assets/jp-companion-icon.png"
 ICONSET="$PROJECT_DIR/build/JP Companion.iconset"
 ICON="$PROJECT_DIR/build/JP Companion.icns"
+BUILT_APP="$PROJECT_DIR/dist/JP Companion.app"
+INSTALLED_APP="$HOME/Applications/JP Companion.app"
 
 if [ ! -x "$PYTHON" ]; then
   echo "Missing project environment: $PROJECT_DIR/.venv"
@@ -41,4 +56,25 @@ iconutil -c icns "$ICONSET" -o "$ICON"
   --collect-all unidic_lite \
   jp_companion.py
 
-echo "Built: $PROJECT_DIR/dist/JP Companion.app"
+codesign --verify --deep --strict "$BUILT_APP"
+if ! file "$BUILT_APP/Contents/MacOS/JP Companion" | grep -q "arm64"; then
+  echo "Refusing to install: the built app is not arm64."
+  exit 1
+fi
+
+echo "Built and verified: $BUILT_APP"
+
+if [ "$INSTALL_APP" = false ]; then
+  exit 0
+fi
+
+osascript -e 'quit app "JP Companion"' 2>/dev/null || true
+sleep 1
+mkdir -p "$HOME/Applications"
+rm -rf "$INSTALLED_APP"
+ditto "$BUILT_APP" "$INSTALLED_APP"
+codesign --verify --deep --strict "$INSTALLED_APP"
+open "$INSTALLED_APP"
+
+rm -rf "$PROJECT_DIR/build" "$PROJECT_DIR/dist" "$PROJECT_DIR/JP Companion.spec"
+echo "Installed and opened: $INSTALLED_APP"

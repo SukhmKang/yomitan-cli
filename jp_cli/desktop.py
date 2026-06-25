@@ -47,83 +47,93 @@ from .cli import (
 
 APP_STYLESHEET = """
 QWidget {
-    background: #151719;
-    color: #e7e7e4;
-    font-family: "Avenir Next", "Hiragino Sans", sans-serif;
-    font-size: 14px;
+    background: #fbfbfa;
+    color: #25282b;
+    font-family: -apple-system, "Hiragino Sans", sans-serif;
+    font-size: 13px;
 }
 QMainWindow {
-    background: #151719;
+    background: #fbfbfa;
 }
 QLabel#eyebrow {
-    color: #8c9794;
-    font-size: 11px;
-    font-weight: 700;
+    color: #737b83;
+    font-size: 10px;
+    font-weight: 600;
 }
 QLabel#status {
-    color: #a6b2ae;
-    font-size: 12px;
+    color: #90979e;
+    font-size: 11px;
 }
 QTextEdit#source {
-    background: #1b1e20;
-    border: 1px solid #33383a;
-    border-radius: 6px;
-    padding: 13px;
-    selection-background-color: #d6a94e;
-    selection-color: #171717;
+    background: #ffffff;
+    border: 1px solid #dfe2e5;
+    border-radius: 4px;
+    padding: 8px 10px;
+    selection-background-color: #dbeafe;
+    selection-color: #172033;
     font-family: "Hiragino Sans", sans-serif;
-    font-size: 20px;
+    font-size: 17px;
 }
 QListWidget {
-    background: #181b1d;
-    border: 1px solid #33383a;
-    border-radius: 6px;
+    background: #ffffff;
+    border: 1px solid #dfe2e5;
+    border-radius: 4px;
     outline: 0;
-    padding: 4px;
+    padding: 0;
 }
 QListWidget::item {
-    border-bottom: 1px solid #292d2f;
-    padding: 9px 10px;
+    border-bottom: 1px solid #eceef0;
+    padding: 6px 9px;
 }
 QListWidget::item:selected {
-    background: #d6a94e;
-    color: #171717;
+    background: #edf4ff;
+    color: #1f2937;
+    border-left: 3px solid #4f7cac;
+    padding-left: 6px;
 }
 QTextBrowser {
-    background: #181b1d;
-    border: 1px solid #33383a;
-    border-radius: 6px;
-    padding: 14px;
-    selection-background-color: #d6a94e;
-    selection-color: #171717;
+    background: #ffffff;
+    border: 1px solid #dfe2e5;
+    border-radius: 4px;
+    padding: 10px 12px;
+    selection-background-color: #dbeafe;
+    selection-color: #172033;
 }
 QPushButton {
     background: transparent;
-    border: 1px solid #3a4042;
-    border-radius: 5px;
-    padding: 7px 12px;
-    color: #bfc5c2;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 5px 8px 4px;
+    color: #737b83;
+    font-size: 12px;
 }
 QPushButton:hover {
-    border-color: #737c79;
+    color: #25282b;
+    background: #f2f3f4;
 }
 QPushButton:checked {
-    background: #e7e7e4;
-    color: #171717;
-    border-color: #e7e7e4;
+    color: #315f8f;
+    border-bottom-color: #4f7cac;
+    font-weight: 600;
 }
 QSplitter::handle {
-    background: #2b2f31;
-    width: 1px;
+    background: transparent;
+    height: 5px;
 }
 QScrollBar:vertical {
-    background: #181b1d;
-    width: 10px;
+    background: transparent;
+    width: 8px;
+    margin: 2px;
 }
 QScrollBar::handle:vertical {
-    background: #454b4d;
-    border-radius: 4px;
-    min-height: 28px;
+    background: #c9ced3;
+    border-radius: 3px;
+    min-height: 24px;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
 }
 """
 
@@ -154,8 +164,8 @@ class JapaneseDesktopWindow(QMainWindow):
         self.explanation_tasks: List[ExplanationTask] = []
 
         self.setWindowTitle("JP Companion")
-        self.resize(760, 860)
-        self.setMinimumSize(560, 620)
+        self.resize(680, 720)
+        self.setMinimumSize(500, 520)
         self.setCentralWidget(self._build_ui())
         self._install_shortcuts()
 
@@ -167,12 +177,12 @@ class JapaneseDesktopWindow(QMainWindow):
     def _build_ui(self) -> QWidget:
         root = QWidget()
         layout = QVBoxLayout(root)
-        layout.setContentsMargins(18, 16, 18, 18)
-        layout.setSpacing(12)
+        layout.setContentsMargins(12, 10, 12, 12)
+        layout.setSpacing(7)
 
         heading = QHBoxLayout()
         title_group = QVBoxLayout()
-        title_group.setSpacing(1)
+        title_group.setSpacing(0)
         eyebrow = QLabel("JP COMPANION")
         eyebrow.setObjectName("eyebrow")
         self.status_label = QLabel("Watching clipboard")
@@ -202,8 +212,8 @@ class JapaneseDesktopWindow(QMainWindow):
         self.source_view.setObjectName("source")
         self.source_view.setReadOnly(True)
         self.source_view.setAcceptRichText(False)
-        self.source_view.setMinimumHeight(82)
-        self.source_view.setMaximumHeight(170)
+        self.source_view.setMinimumHeight(58)
+        self.source_view.setMaximumHeight(130)
         layout.addWidget(self.source_view)
 
         self.mode_stack = QStackedWidget()
@@ -216,10 +226,10 @@ class JapaneseDesktopWindow(QMainWindow):
         pane = QWidget()
         layout = QVBoxLayout(pane)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(9)
+        layout.setSpacing(5)
 
         self.match_list = QListWidget()
-        self.match_list.setMinimumHeight(170)
+        self.match_list.setMinimumHeight(125)
         self.match_list.setWordWrap(True)
         self.match_list.setHorizontalScrollBarPolicy(
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff
@@ -236,7 +246,7 @@ class JapaneseDesktopWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Vertical)
         splitter.addWidget(self.match_list)
         splitter.addWidget(self.definition_view)
-        splitter.setSizes([240, 430])
+        splitter.setSizes([190, 390])
         layout.addWidget(splitter)
         return pane
 
@@ -286,14 +296,14 @@ class JapaneseDesktopWindow(QMainWindow):
         )
         self.source_view.setPlainText(self.current.text)
         line_count = min(4, max(1, self.current.text.count("\n") + 1))
-        self.source_view.setFixedHeight(58 + line_count * 30)
+        self.source_view.setFixedHeight(38 + line_count * 24)
         self.match_list.blockSignals(True)
         self.match_list.clear()
         for item in self.current.lookup_items:
             entry = item.entries[0] if item.entries else None
             reading = "、".join(entry.readings[:2]) if entry else ""
             meaning = first_clean_sense(entry) if entry else ""
-            row = QListWidgetItem(f"{item.term}    {reading}\n{meaning}")
+            row = QListWidgetItem(f"{item.term}  {reading}\n{meaning}")
             row.setData(Qt.ItemDataRole.UserRole, item)
             self.match_list.addItem(row)
         self.match_list.blockSignals(False)
@@ -318,8 +328,8 @@ class JapaneseDesktopWindow(QMainWindow):
         if self.current is not None and self.current.lookup_items:
             item = self.current.lookup_items[self.selected_index]
             selection = QTextEdit.ExtraSelection()
-            selection.format.setBackground(QColor("#d6a94e"))
-            selection.format.setForeground(QColor("#171717"))
+            selection.format.setBackground(QColor("#dbeafe"))
+            selection.format.setForeground(QColor("#172033"))
             selection.format.setFontWeight(QFont.Weight.Bold)
             cursor = self.source_view.textCursor()
             cursor.setPosition(item.start)
@@ -356,7 +366,7 @@ class JapaneseDesktopWindow(QMainWindow):
 
     @staticmethod
     def _message_html(message: str) -> str:
-        return f'<p style="color:#9aa39f">{escape_html(message)}</p>'
+        return f'<p style="color:#8b9299">{escape_html(message)}</p>'
 
     def _install_shortcuts(self) -> None:
         for key in (Qt.Key.Key_Left, Qt.Key.Key_Up):
@@ -416,18 +426,23 @@ def format_lookup_html(item: LookupItem) -> str:
     chunks = []
     for entry in item.entries:
         readings = "、".join(entry.readings[:4])
-        common = " · common" if entry.common else ""
+        common = (
+            '<span style="color:#4472a1;background:#edf4ff;'
+            'font-size:10px;padding:1px 4px">common</span>'
+            if entry.common
+            else ""
+        )
         senses = "".join(
-            f"<li style='margin-bottom:7px'>{escape_html(clean_sense(sense))}</li>"
+            f"<li style='margin-bottom:4px'>{escape_html(clean_sense(sense))}</li>"
             for sense in entry.senses[:6]
         )
         chunks.append(
-            f'<section style="margin-bottom:20px">'
-            f'<div style="font-size:18px;font-weight:700">'
+            f'<section style="margin-bottom:14px">'
+            f'<div style="font-size:17px;font-weight:600;color:#202428">'
             f"{escape_html(entry.primary_spelling)}</div>"
-            f'<div style="color:#aab2af;margin:2px 0 8px">'
-            f"{escape_html(readings)}{common}</div>"
-            f'<ol style="margin-top:0;padding-left:24px">{senses}</ol>'
+            f'<div style="color:#7d858c;margin:1px 0 6px">'
+            f"{escape_html(readings)}&nbsp;&nbsp;{common}</div>"
+            f'<ol style="margin-top:0;padding-left:21px;line-height:1.35">{senses}</ol>'
             f"</section>"
         )
     return "".join(chunks)
@@ -438,26 +453,26 @@ def format_explanation_html(explanation: SentenceExplanation) -> str:
         return f"<p>{escape_html(explanation.raw).replace(chr(10), '<br>')}</p>"
 
     grammar = "".join(
-        f'<section style="margin-bottom:14px">'
-        f'<div style="font-weight:700">{escape_html(point.title)}</div>'
-        f'<div>{escape_html(point.explanation).replace(chr(10), "<br>")}</div>'
+        f'<section style="margin-bottom:11px">'
+        f'<div style="font-weight:600;color:#30353a">{escape_html(point.title)}</div>'
+        f'<div style="line-height:1.4">{escape_html(point.explanation).replace(chr(10), "<br>")}</div>'
         f"</section>"
         for point in explanation.grammar_points
     )
     return (
         explanation_section("意味", explanation.meaning)
         + explanation_section("やさしく説明", explanation.yasashiku)
-        + f'<div style="color:#8c9794;font-size:11px;font-weight:700;'
-        f'margin:18px 0 9px">文法ポイント</div>{grammar}'
+        + f'<div style="color:#7d858c;font-size:10px;font-weight:600;'
+        f'margin:14px 0 7px">文法ポイント</div>{grammar}'
         + explanation_section("ニュアンス", explanation.nuance)
     )
 
 
 def explanation_section(title: str, body: str) -> str:
     return (
-        f'<div style="color:#8c9794;font-size:11px;font-weight:700;'
-        f'margin:4px 0 7px">{escape_html(title)}</div>'
-        f'<div style="line-height:1.55;margin-bottom:18px">'
+        f'<div style="color:#7d858c;font-size:10px;font-weight:600;'
+        f'margin:3px 0 5px">{escape_html(title)}</div>'
+        f'<div style="line-height:1.4;margin-bottom:13px">'
         f'{escape_html(body).replace(chr(10), "<br>")}</div>'
     )
 
