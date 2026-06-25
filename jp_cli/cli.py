@@ -29,6 +29,7 @@ from .deinflect import Deinflection, deinflect, entry_matches_conditions
 POLL_INTERVAL_SECONDS = 0.5
 DEFAULT_LLM_MODEL = "gpt-4.1-mini"
 DEFAULT_DB_PATH = Path.home() / ".jp_data" / "jp.sqlite3"
+DEFAULT_ENV_PATH = Path.home() / ".jp_data" / ".env"
 
 
 def _resolve_db_path(override: Optional[str] = None) -> Path:
@@ -50,6 +51,10 @@ def get_db_path() -> Path:
 def set_db_path(override: Optional[str] = None) -> None:
     global _db_path
     _db_path = _resolve_db_path(override)
+
+
+def load_environment() -> None:
+    load_dotenv(DEFAULT_ENV_PATH)
 PARTICLE_HINTS = {
     "は": "topic marker",
     "が": "subject marker",
@@ -125,7 +130,7 @@ class ClipboardEntry:
 
 
 def main(argv: Optional[List[str]] = None) -> None:
-    load_dotenv()
+    load_environment()
 
     parser = argparse.ArgumentParser(
         prog="jp",

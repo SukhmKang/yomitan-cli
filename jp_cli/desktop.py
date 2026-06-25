@@ -4,7 +4,6 @@ import sys
 import time
 from typing import List, Optional
 
-from dotenv import load_dotenv
 from PyQt6.QtCore import (
     QObject,
     QRunnable,
@@ -40,6 +39,7 @@ from .cli import (
     classify_text,
     contains_japanese,
     explain_sentence,
+    load_environment,
     normalize_clipboard_text,
     tokenize_japanese,
 )
@@ -463,7 +463,7 @@ def explanation_section(title: str, body: str) -> str:
 
 
 def main() -> None:
-    load_dotenv()
+    load_environment()
     app = QApplication(sys.argv)
     app.setApplicationName("JP Companion")
     app.setStyleSheet(APP_STYLESHEET)

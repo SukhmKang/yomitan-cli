@@ -4,3 +4,6 @@
 __pycache__/
 *.pyc
 jmdict-eng-*.json
+build/
+dist/
+*.spec

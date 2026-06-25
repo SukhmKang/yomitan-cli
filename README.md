@@ -41,6 +41,23 @@ changes.
 python -m jp_cli desktop
 ```
 
+### Build the macOS app
+
+Install the packaging dependency once, then build:
+
+```bash
+/opt/homebrew/bin/python3.11 -m venv .venv
+.venv/bin/python -m pip install -e . pyinstaller
+./scripts/build_macos_app.sh
+```
+
+The app is created at `dist/JP Companion.app`. Copy it to your Applications
+folder and open it like any other Mac app. The packaged app uses the dictionary
+at `~/.jp_data/jp.sqlite3` and loads optional API settings from
+`~/.jp_data/.env`. The build script verifies that the project environment is
+running natively on Apple silicon before packaging and generates the macOS icon
+from `assets/jp-companion-icon.png`.
+
 Use the left/right or up/down arrow keys to move through dictionary matches.
 `Tab` toggles between the dictionary and `やさしく説明` views. The explanation
 runs in a background worker so dictionary navigation remains responsive.
@@ -71,13 +88,14 @@ Activate your virtualenv first:
 source .venv/bin/activate
 ```
 
-Create a local `.env` file for the LLM explanation:
+Create the shared data directory and copy the example configuration there:
 
 ```bash
-cp .env.example .env
+mkdir -p ~/.jp_data
+cp .env.example ~/.jp_data/.env
 ```
 
-Then edit `.env`:
+Then edit `~/.jp_data/.env`:
 
 ```bash
 OPENAI_API_KEY=your_api_key_here
@@ -94,7 +112,8 @@ The database location is resolved in this order (highest priority first):
 
 1. `--db-path <path>` flag (works on any subcommand,
    e.g. `jp lookup 先生 --db-path ~/dicts/jp.sqlite3`)
-2. `JP_DB_PATH` environment variable (can be set in your shell or `.env`)
+2. `JP_DB_PATH` environment variable (can be set in your shell or
+   `~/.jp_data/.env`)
 3. Default: `~/.jp_data/jp.sqlite3`
 
 `import-jmdict` writes to the same resolved path, so set `JP_DB_PATH` (or pass

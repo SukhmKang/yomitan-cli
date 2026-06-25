@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import unittest
-from pathlib import Path
 
 from jp_cli.cli import (
     ClipboardEntry,
@@ -14,10 +13,7 @@ from jp_cli.deinflect import deinflect, entry_matches_conditions
 
 
 def setUpModule() -> None:
-    # DB-dependent tests rely on the locally-built dictionary in the repo's
-    # .jp_data/. Point at it explicitly so the suite is independent of the
-    # current working directory.
-    set_db_path(str(Path(__file__).resolve().parent.parent / ".jp_data" / "jp.sqlite3"))
+    set_db_path()
 
 
 class DeinflectionTests(unittest.TestCase):
