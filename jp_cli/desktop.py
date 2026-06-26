@@ -7,6 +7,7 @@ from typing import List, Optional
 from PyQt6.QtCore import (
     QObject,
     QRunnable,
+    QTimer,
     Qt,
     QThreadPool,
     pyqtSignal,
@@ -41,8 +42,11 @@ from .cli import (
     explain_sentence,
     load_environment,
     normalize_clipboard_text,
+    read_clipboard,
     tokenize_japanese,
 )
+
+CLIPBOARD_POLL_INTERVAL_MS = 500
 
 
 APP_STYLESHEET = """
@@ -171,8 +175,12 @@ class JapaneseDesktopWindow(QMainWindow):
 
         clipboard = app.clipboard()
         clipboard.dataChanged.connect(self._on_clipboard_changed)
+        self.clipboard_timer = QTimer(self)
+        self.clipboard_timer.setInterval(CLIPBOARD_POLL_INTERVAL_MS)
+        self.clipboard_timer.timeout.connect(self._check_clipboard)
+        self.clipboard_timer.start()
         self._show_waiting_state()
-        self._process_clipboard_text(clipboard.text())
+        self._check_clipboard()
 
     def _build_ui(self) -> QWidget:
         root = QWidget()
@@ -259,7 +267,10 @@ class JapaneseDesktopWindow(QMainWindow):
         return pane
 
     def _on_clipboard_changed(self) -> None:
-        self._process_clipboard_text(self.app.clipboard().text())
+        self._check_clipboard()
+
+    def _check_clipboard(self) -> None:
+        self._process_clipboard_text(read_clipboard())
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
