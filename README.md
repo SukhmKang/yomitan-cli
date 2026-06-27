@@ -45,7 +45,7 @@ python -m jp_cli desktop
 
 #### macOS
 
-Install the packaging dependency once:
+Install the project and packaging dependency once:
 
 ```bash
 /opt/homebrew/bin/python3.11 -m venv .venv
@@ -95,9 +95,8 @@ To create `dist\JP Companion\JP Companion.exe` without installing or launching i
 ```
 
 The packaged app uses the dictionary at `%USERPROFILE%\.jp_data\jp.sqlite3` and
-loads optional API settings from `%USERPROFILE%\.jp_data\.env`. If
-`assets\jp-companion-icon.ico` exists, the build script uses it as the Windows
-application icon.
+loads optional API settings from `%USERPROFILE%\.jp_data\.env`. The build script
+uses `assets\jp-companion-icon.ico` as the Windows application icon.
 
 Use the left/right or up/down arrow keys to move through dictionary matches.
 `Tab` toggles between the dictionary and `やさしく説明` views. The explanation
@@ -227,4 +226,37 @@ If you want the shorter `jp` command:
 ```bash
 python -m pip install -e .
 jp watch
+```
+
+## Development
+
+The command parser and compatibility re-exports live in `jp_cli/cli.py`; the
+implementation is split by responsibility:
+
+- `commands.py`: terminal command handlers such as `watch`, `show`, and
+  `inspect`
+- `dictionary.py`: JMdict import, SQLite schema, and dictionary query/ranking
+- `lookup.py`: sentence scanning, deinflection matching, and lookup item
+  selection
+- `text.py`: Japanese detection, classification, normalization, and fugashi
+  tokenization
+- `explain.py`: OpenAI explanation generation and explanation cache handling
+- `desktop.py`: the PyQt desktop companion
+- `rendering.py`, `terminal.py`, and `clipboard.py`: terminal UI, key handling,
+  and clipboard integration
+
+Install local development tools when you want to lint the project:
+
+```bash
+.venv/bin/python -m pip install ruff pyflakes vulture
+```
+
+Useful checks:
+
+```bash
+.venv/bin/python -m unittest discover -s tests
+.venv/bin/python -m ruff check jp_cli tests --select F
+.venv/bin/python -m pyflakes jp_cli tests
+.venv/bin/python -m vulture jp_cli tests --min-confidence 80
+.venv/bin/python -m compileall jp_cli tests
 ```

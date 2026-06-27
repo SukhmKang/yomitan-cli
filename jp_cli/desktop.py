@@ -32,18 +32,20 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from .cli import (
+from .clipboard import read_clipboard
+from .config import load_environment
+from .explain import explain_sentence
+from .lookup import build_lookup_items
+from .models import (
     ClipboardEntry,
     DictionaryEntry,
     LookupItem,
     SentenceExplanation,
-    build_lookup_items,
+)
+from .text import (
     classify_text,
     contains_japanese,
-    explain_sentence,
-    load_environment,
     normalize_clipboard_text,
-    read_clipboard,
     tokenize_japanese,
 )
 
