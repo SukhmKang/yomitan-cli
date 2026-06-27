@@ -3,16 +3,20 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import select
 import sqlite3
 import subprocess
 import sys
 import time
-import termios
-import tty
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, List, Optional
+
+if os.name == "nt":
+    import msvcrt
+else:
+    import select
+    import termios
+    import tty
 
 from fugashi import Tagger
 from dotenv import load_dotenv
@@ -130,6 +134,7 @@ class ClipboardEntry:
 
 
 def main(argv: Optional[List[str]] = None) -> None:
+    configure_standard_streams()
     load_environment()
 
     parser = argparse.ArgumentParser(
@@ -152,7 +157,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     watch_parser = subparsers.add_parser(
         "watch",
         parents=[common],
-        help="Watch the macOS clipboard for copied Japanese text.",
+        help="Watch the system clipboard for copied Japanese text.",
     )
     watch_parser.add_argument(
         "--interval",
@@ -229,6 +234,13 @@ def main(argv: Optional[List[str]] = None) -> None:
         from .desktop import main as desktop_main
 
         desktop_main()
+
+
+def configure_standard_streams() -> None:
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name)
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
 
 
 def inspect_text(text: str) -> None:
@@ -597,9 +609,6 @@ def debug_keys() -> None:
 
 
 def watch_clipboard(interval: float) -> None:
-    if not command_exists("pbpaste"):
-        raise SystemExit("jp watch currently requires macOS and the pbpaste command.")
-
     original_terminal_settings = enable_single_keypress_input()
     last_seen: Optional[str] = None
     current: Optional[ClipboardEntry] = None
@@ -656,12 +665,31 @@ def watch_clipboard(interval: float) -> None:
 
 
 def read_clipboard() -> str:
+    if sys.platform == "darwin":
+        return read_clipboard_with_command(["pbpaste"])
+    if os.name == "nt":
+        return read_clipboard_with_command(
+            ["powershell.exe", "-NoProfile", "-Command", "Get-Clipboard -Raw"]
+        )
+
+    if command_exists("wl-paste"):
+        return read_clipboard_with_command(["wl-paste", "--no-newline"])
+    if command_exists("xclip"):
+        return read_clipboard_with_command(["xclip", "-selection", "clipboard", "-out"])
+    if command_exists("xsel"):
+        return read_clipboard_with_command(["xsel", "--clipboard", "--output"])
+    return ""
+
+
+def read_clipboard_with_command(command: List[str]) -> str:
     try:
         completed = subprocess.run(
-            ["pbpaste"],
+            command,
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=1,
         )
     except subprocess.SubprocessError:
@@ -669,7 +697,7 @@ def read_clipboard() -> str:
 
     if completed.returncode != 0:
         return ""
-    return completed.stdout
+    return completed.stdout or ""
 
 
 def with_sentence_explanation(entry: ClipboardEntry) -> ClipboardEntry:
@@ -1270,7 +1298,7 @@ def render(
         Panel(
             Group(
                 Text(status, style="bold cyan"),
-                Text("Copy Japanese with Cmd+C. Use ←/→ to page dictionary matches. Tab toggles detail. Press q to quit.", style="dim"),
+                Text("Copy Japanese to the clipboard. Use ←/→ to page dictionary matches. Tab toggles detail. Press q to quit.", style="dim"),
             ),
             title="jp watch",
             box=box.ROUNDED,
@@ -1403,8 +1431,10 @@ def show_cursor() -> None:
     print("\033[?25h", end="")
 
 
-def enable_single_keypress_input() -> Optional[List[int]]:
+def enable_single_keypress_input() -> Optional[Any]:
     if not sys.stdin.isatty():
+        return None
+    if os.name == "nt":
         return None
 
     settings = termios.tcgetattr(sys.stdin)
@@ -1412,7 +1442,7 @@ def enable_single_keypress_input() -> Optional[List[int]]:
     return settings
 
 
-def restore_terminal(settings: Optional[List[int]]) -> None:
+def restore_terminal(settings: Optional[Any]) -> None:
     if settings is not None:
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
 
@@ -1438,6 +1468,8 @@ def read_keypress() -> Optional[str]:
 def read_key_bytes() -> bytes:
     if not sys.stdin.isatty():
         return b""
+    if os.name == "nt":
+        return read_windows_key_bytes()
 
     readable, _, _ = select.select([sys.stdin], [], [], 0)
     if not readable:
@@ -1457,3 +1489,18 @@ def read_key_bytes() -> bytes:
         if data in {b"\x1b[C", b"\x1b[D", b"\x1bOC", b"\x1bOD"}:
             break
     return data
+
+
+def read_windows_key_bytes() -> bytes:
+    if not msvcrt.kbhit():
+        return b""
+
+    data = msvcrt.getwch()
+    if data in {"\x00", "\xe0"} and msvcrt.kbhit():
+        code = msvcrt.getwch()
+        if code == "K":
+            return b"\x1b[D"
+        if code == "M":
+            return b"\x1b[C"
+        return code.encode(errors="ignore")
+    return data.encode(errors="ignore")

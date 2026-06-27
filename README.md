@@ -18,7 +18,7 @@ python3 -m jp_cli inspect "先生に言われたことがまだ気になって�
 > or `desktop` will return results, you must build the local database once with
 > `import-jmdict`. See [Dictionary database location](#dictionary-database-location).
 
-The watcher polls the macOS clipboard, detects Japanese text, and classifies it
+The watcher polls the system clipboard, detects Japanese text, and classifies it
 as a word/phrase or sentence.
 For sentences, it shows a Yomitan-style dictionary match table that you can page
 through with the left and right arrow keys, plus an LLM-generated N2-friendly
@@ -41,7 +41,9 @@ changes.
 python -m jp_cli desktop
 ```
 
-### Build the macOS app
+### Build the desktop app
+
+#### macOS
 
 Install the packaging dependency once:
 
@@ -69,6 +71,33 @@ To create `dist/JP Companion.app` without installing or launching it:
 The packaged app uses the dictionary at `~/.jp_data/jp.sqlite3` and loads
 optional API settings from `~/.jp_data/.env`. The build script generates the
 macOS icon from `assets/jp-companion-icon.png`.
+
+#### Windows
+
+Install the packaging dependency once:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -e . pyinstaller
+```
+
+After making changes, rebuild, install to `%LOCALAPPDATA%\Programs\JP Companion`,
+and relaunch:
+
+```powershell
+.\scripts\build_windows_app.ps1
+```
+
+To create `dist\JP Companion\JP Companion.exe` without installing or launching it:
+
+```powershell
+.\scripts\build_windows_app.ps1 -BuildOnly
+```
+
+The packaged app uses the dictionary at `%USERPROFILE%\.jp_data\jp.sqlite3` and
+loads optional API settings from `%USERPROFILE%\.jp_data\.env`. If
+`assets\jp-companion-icon.ico` exists, the build script uses it as the Windows
+application icon.
 
 Use the left/right or up/down arrow keys to move through dictionary matches.
 `Tab` toggles between the dictionary and `やさしく説明` views. The explanation
@@ -100,11 +129,24 @@ Activate your virtualenv first:
 source .venv/bin/activate
 ```
 
+On Windows:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
 Create the shared data directory and copy the example configuration there:
 
 ```bash
 mkdir -p ~/.jp_data
 cp .env.example ~/.jp_data/.env
+```
+
+On Windows:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.jp_data"
+Copy-Item .env.example "$env:USERPROFILE\.jp_data\.env"
 ```
 
 Then edit `~/.jp_data/.env`:
@@ -152,7 +194,7 @@ In one terminal:
 python -m jp_cli watch
 ```
 
-Then copy Japanese text from anywhere with `Cmd+C`.
+Then copy Japanese text from anywhere to the clipboard.
 
 Use `←` and `→` to move through dictionary matches.
 

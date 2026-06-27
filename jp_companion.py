@@ -1,4 +1,4 @@
-"""Standalone entry point for the packaged macOS desktop app."""
+"""Standalone entry point for packaged desktop apps."""
 
 from jp_cli.desktop import main
 

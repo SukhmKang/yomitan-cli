@@ -21,3 +21,6 @@ dependencies = [
 
 [project.scripts]
 jp = "jp_cli.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["jp_cli*"]

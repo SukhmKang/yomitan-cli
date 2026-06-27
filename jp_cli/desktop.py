@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import time
+from pathlib import Path
 from typing import List, Optional
 
 from PyQt6.QtCore import (
@@ -12,7 +13,7 @@ from PyQt6.QtCore import (
     QThreadPool,
     pyqtSignal,
 )
-from PyQt6.QtGui import QColor, QFont, QKeySequence, QShortcut, QTextCursor
+from PyQt6.QtGui import QColor, QFont, QIcon, QKeySequence, QShortcut, QTextCursor
 from PyQt6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -53,7 +54,7 @@ APP_STYLESHEET = """
 QWidget {
     background: #fbfbfa;
     color: #25282b;
-    font-family: -apple-system, "Hiragino Sans", sans-serif;
+    font-family: -apple-system, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif;
     font-size: 13px;
 }
 QMainWindow {
@@ -75,7 +76,7 @@ QTextEdit#source {
     padding: 8px 10px;
     selection-background-color: #dbeafe;
     selection-color: #172033;
-    font-family: "Hiragino Sans", sans-serif;
+    font-family: "Yu Gothic UI", "Hiragino Sans", sans-serif;
     font-size: 17px;
 }
 QListWidget {
@@ -168,6 +169,9 @@ class JapaneseDesktopWindow(QMainWindow):
         self.explanation_tasks: List[ExplanationTask] = []
 
         self.setWindowTitle("JP Companion")
+        icon = load_app_icon()
+        if not icon.isNull():
+            self.setWindowIcon(icon)
         self.resize(620, 500)
         self.setMinimumSize(460, 380)
         self.setCentralWidget(self._build_ui())
@@ -270,7 +274,12 @@ class JapaneseDesktopWindow(QMainWindow):
         self._check_clipboard()
 
     def _check_clipboard(self) -> None:
-        self._process_clipboard_text(read_clipboard())
+        self._process_clipboard_text(self._read_clipboard_text())
+
+    def _read_clipboard_text(self) -> str:
+        if sys.platform == "darwin":
+            return read_clipboard()
+        return self.app.clipboard().text()
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
@@ -499,6 +508,24 @@ def explanation_section(title: str, body: str) -> str:
         f'<div style="line-height:1.4;margin-bottom:13px">'
         f'{escape_html(body).replace(chr(10), "<br>")}</div>'
     )
+
+
+def load_app_icon() -> QIcon:
+    base_dirs = []
+    bundled_dir = getattr(sys, "_MEIPASS", None)
+    if bundled_dir:
+        base_dirs.append(Path(bundled_dir))
+    base_dirs.append(Path(__file__).resolve().parent.parent)
+
+    for base_dir in base_dirs:
+        for relative_path in (
+            Path("assets") / "jp-companion-icon.ico",
+            Path("assets") / "jp-companion-icon.png",
+        ):
+            icon_path = base_dir / relative_path
+            if icon_path.exists():
+                return QIcon(str(icon_path))
+    return QIcon()
 
 
 def main() -> None:
