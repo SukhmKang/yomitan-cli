@@ -24,3 +24,6 @@ jp = "jp_cli.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["jp_cli*"]
+
+[tool.setuptools.package-data]
+jp_cli = ["japanese_transforms.json"]

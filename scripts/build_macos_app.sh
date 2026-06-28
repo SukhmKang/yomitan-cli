@@ -53,6 +53,7 @@ iconutil -c icns "$ICONSET" -o "$ICON"
   --name "JP Companion" \
   --icon "$ICON" \
   --osx-bundle-identifier "com.sukhmkang.jp-companion" \
+  --add-data "$PROJECT_DIR/jp_cli/japanese_transforms.json:jp_cli" \
   --collect-all unidic_lite \
   jp_companion.py
 
