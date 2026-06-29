@@ -279,9 +279,10 @@ class JapaneseDesktopWindow(QMainWindow):
         self._process_clipboard_text(self._read_clipboard_text())
 
     def _read_clipboard_text(self) -> str:
-        if sys.platform == "darwin":
-            return read_clipboard()
-        return self.app.clipboard().text()
+        text = self.app.clipboard().text()
+        if sys.platform == "darwin" and not text:
+            text = read_clipboard()
+        return text
 
     def resizeEvent(self, event) -> None:
         super().resizeEvent(event)
